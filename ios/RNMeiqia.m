@@ -45,6 +45,7 @@ RCT_EXPORT_METHOD(closeMeiqiaService) {
 }
 
 RCT_EXPORT_METHOD(registerDeviceToken:(NSString *)deviceToken) {
+    [self initDeviceToken:[RCTConvert NSData:deviceToken]];
    [MQManager registerDeviceToken:[RCTConvert NSData:deviceToken]];
 }
 
@@ -91,7 +92,7 @@ RCT_EXPORT_METHOD(show: (NSDictionary *)param resolve: (RCTPromiseResolveBlock)r
         [chatViewManager setLoginCustomizedId:customId];
     }else{
 #pragma mark 切记切记切记 下面这一行是错误的写法 , 这样会导致 ID = "notadda" 和 meiqia多个用户绑定,最终导致 对话内容错乱 A客户能看到 B C D的客户的对话内容
-        [chatViewManager setLoginCustomizedId:@"notadda"];
+        [chatViewManager setLoginCustomizedId:self.deviceTokenStr];
     }
 
     //客服组scheduledInfo
@@ -122,6 +123,22 @@ RCT_EXPORT_METHOD(show: (NSDictionary *)param resolve: (RCTPromiseResolveBlock)r
     [MQManager setScheduledAgentWithAgentId:agentId agentGroupId:agentGroupId scheduleRule:rule];
     //客服组scheduledInfo
     [chatViewManager pushMQChatViewControllerInViewController:[UIApplication sharedApplication].delegate.window.rootViewController];
+}
+
+- (void)initDeviceToken:(NSData *deviceToken){
+     NSString *tokenStr = @"";
+   if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 13) {
+
+       const unsigned *tokenBytes = (const unsigned *)[deviceToken bytes];
+       tokenStr = [NSString stringWithFormat:@"%08x%08x%08x%08x%08x%08x%08x%08x",
+                             ntohl(tokenBytes[0]), ntohl(tokenBytes[1]), ntohl(tokenBytes[2]),
+                             ntohl(tokenBytes[3]), ntohl(tokenBytes[4]), ntohl(tokenBytes[5]),
+                             ntohl(tokenBytes[6]), ntohl(tokenBytes[7])];
+   } else {
+     tokenStr = [[deviceToken description] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
+     tokenStr = [tokenStr stringByReplacingOccurrencesOfString:@" " withString:@""];
+   }
+   self.deviceTokenStr =  tokenStr;
 }
 
 @end

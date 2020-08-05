@@ -7,4 +7,6 @@
 
 @interface RNMeiqia : NSObject <RCTBridgeModule>
 
+@property NSString* deviceTokenStr;
+
 @end
